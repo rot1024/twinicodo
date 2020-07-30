@@ -1,0 +1,28 @@
+[package]
+name = "twinicodo"
+version = "0.1.0"
+authors = ["rot1024 <aayhrot@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+quick-xml = "0.18.1"
+thiserror = "1.0.20"
+clap = "3.0.0-beta.1"
+serde = { version = "1.0.114", features = ["derive"] }
+futures = "0.3.5"
+tokio = { version = "0.2.22", features = ["rt-threaded", "macros", "blocking"] }
+lazy_static = "1.4.0"
+regex = "1.3.9"
+confy = "0.4.0"
+dialoguer = "0.6.2"
+derive_more = "0.99.9"
+serde_json = "1.0.57"
+reqwest = { version = "0.10.7", features = ["json"] }
+itertools = "0.9.0"
+url = "2.1.1"
+chrono = { version = "0.4.13", features = ["serde"] }
+
+[lib]
+path = "src/lib/mod.rs"
