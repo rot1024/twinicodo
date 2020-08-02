@@ -82,7 +82,12 @@ async fn main() -> MainResult<()> {
                     .map(|d| d.to_rfc3339())
                     .unwrap_or_default(),
                 r.first()
-                    .map(|t| t.full_text[..20].replace("\n", ""))
+                    .map(|t| t
+                        .full_text
+                        .chars()
+                        .take(20)
+                        .collect::<String>()
+                        .replace("\n", ""))
                     .unwrap_or_default()
             );
         })
