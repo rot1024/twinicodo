@@ -17,7 +17,7 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next().map(|t| {
             let date = t.created_at.map(|d| d.timestamp() as u64).unwrap_or(0);
-            let vpos = if self.1 == 0 { 0 } else { date - self.1 };
+            let vpos = if self.1 == 0 { 0 } else { (date - self.1) / 10 };
             if self.1 == 0 {
                 self.1 = date;
             }
