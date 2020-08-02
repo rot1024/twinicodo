@@ -73,23 +73,29 @@ async fn main() -> MainResult<()> {
     let tweets = client
         .search_tweets(query)
         .inspect_ok(|r| {
-            eprintln!(
-                "{} tweets found! First tweet: {} {} {}",
-                r.len(),
-                r.first().map(|t| &t.id as &str).unwrap_or(""),
-                r.first()
-                    .and_then(|t| t.created_at)
-                    .map(|d| d.to_rfc3339())
-                    .unwrap_or_default(),
-                r.first()
-                    .map(|t| t
-                        .full_text
-                        .chars()
-                        .take(20)
-                        .collect::<String>()
-                        .replace("\n", ""))
-                    .unwrap_or_default()
-            );
+            if r.len() > 0 {
+                eprintln!(
+                    "{} tweets: {}/{} {} {}",
+                    r.len(),
+                    r.first()
+                        .and_then(|t| t.user.as_ref())
+                        .map(|u| &u.screen_name as &str)
+                        .unwrap_or(""),
+                    r.first().map(|t| &t.id as &str).unwrap_or(""),
+                    r.first()
+                        .and_then(|t| t.created_at)
+                        .map(|d| d.to_rfc3339())
+                        .unwrap_or_default(),
+                    r.first()
+                        .map(|t| t
+                            .full_text
+                            .chars()
+                            .take(20)
+                            .collect::<String>()
+                            .replace("\n", ""))
+                        .unwrap_or_default()
+                );
+            }
         })
         .try_collect::<Vec<_>>()
         .await?;
