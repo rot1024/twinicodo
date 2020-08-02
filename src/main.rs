@@ -73,7 +73,15 @@ async fn main() -> MainResult<()> {
     let tweets = client
         .search_tweets(query)
         .inspect_ok(|r| {
-            println!("{} tweets found", r.len());
+            eprintln!(
+                "{} tweets found! First tweet ID: {}, created at {}",
+                r.len(),
+                r.first().map(|t| t.id.to_string()).unwrap_or_default(),
+                r.first()
+                    .and_then(|t| t.created_at)
+                    .map(|d| d.to_rfc3339())
+                    .unwrap_or_default()
+            );
         })
         .try_collect::<Vec<_>>()
         .await?;
@@ -87,7 +95,7 @@ async fn main() -> MainResult<()> {
         .collect::<Vec<_>>();
 
     if tweets.is_empty() {
-        println!("No tweet found.");
+        eprintln!("No tweet found.");
         return Ok(());
     }
 
@@ -98,12 +106,12 @@ async fn main() -> MainResult<()> {
     })
     .await??;
 
-    println!("Done!");
+    eprintln!("Done!");
     Ok(())
 }
 
 fn init() -> MainResult<config::Config> {
-    println!("Please provide Twitter auth information!");
+    eprintln!("Please provide Twitter auth information!");
 
     let theme = ColorfulTheme {
         ..ColorfulTheme::default()
