@@ -7,7 +7,7 @@ use thiserror::Error;
 use tokio::task::{spawn_blocking, JoinError};
 use twinicodo::{
     iter::SortedTweetToChat,
-    nicodo::{write_xml, XMLError},
+    nicodo::{write_xml, Chat, XMLError},
     twitter::{CookieError, Error as TwitterError, Query, TwitterClient},
 };
 
@@ -74,12 +74,15 @@ async fn main() -> MainResult<()> {
         .search_tweets(query)
         .inspect_ok(|r| {
             eprintln!(
-                "{} tweets found! First tweet ID: {}, created at {}",
+                "{} tweets found! First tweet: {} {} {}",
                 r.len(),
-                r.first().map(|t| t.id.to_string()).unwrap_or_default(),
+                r.first().map(|t| &t.id as &str).unwrap_or(""),
                 r.first()
                     .and_then(|t| t.created_at)
                     .map(|d| d.to_rfc3339())
+                    .unwrap_or_default(),
+                r.first()
+                    .map(|t| t.full_text[..20].replace("\n", ""))
                     .unwrap_or_default()
             );
         })
@@ -99,14 +102,14 @@ async fn main() -> MainResult<()> {
         return Ok(());
     }
 
-    spawn_blocking(move || -> MainResult<()> {
+    let tweets = spawn_blocking(move || -> MainResult<Vec<Chat>> {
         let w = File::create(output)?;
         write_xml(w, tweets.iter())?;
-        Ok(())
+        Ok(tweets)
     })
     .await??;
 
-    eprintln!("Done!");
+    eprintln!("{} tweets are saved!", tweets.len());
     Ok(())
 }
 
