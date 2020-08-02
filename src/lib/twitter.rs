@@ -378,14 +378,14 @@ pub struct TweetID(pub String);
 
 impl TweetID {
     fn datetime(&self) -> Result<DateTime<Utc>, ParseIntError> {
-        Ok(Utc.timestamp((self.0.parse::<i64>()? >> 22) + 1288834974657, 0))
+        Ok(Utc.timestamp_millis((self.0.parse::<i64>()? >> 22) + 1288834974657))
     }
 }
 
 #[test]
 fn test_tweet_id() {
     assert_eq!(
-        Utc.timestamp(1596385521282, 0),
+        Utc.timestamp_millis(1596385521282),
         TweetID("1289960487912783872".to_string())
             .datetime()
             .unwrap()
