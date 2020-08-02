@@ -16,14 +16,14 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next().map(|t| {
-            let date = t.created_at.timestamp() as u64;
+            let date = t.created_at.map(|d| d.timestamp() as u64).unwrap_or(0);
             let vpos = if self.1 == 0 { 0 } else { date - self.1 };
             self.1 = date;
 
             Self::Item {
                 vpos,
                 date,
-                id: Some(t.id.to_string()),
+                id: Some(t.id),
                 user_id: t.user.map(|u| u.screen_name),
                 mail: None,
                 content: cleanup(&t.full_text),

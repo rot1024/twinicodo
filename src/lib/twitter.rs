@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, TimeZone, Utc};
 use derive_more::From;
 use futures::stream::{try_unfold, TryStream};
 use itertools::Itertools;
@@ -9,7 +9,7 @@ use reqwest::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{borrow::Cow, collections::HashMap, fmt, str::FromStr};
+use std::{borrow::Cow, collections::HashMap, fmt, num::ParseIntError, str::FromStr};
 use thiserror::Error;
 
 const DEFAULT_PARAMS: &[(&str, &str)] = &[
@@ -218,26 +218,22 @@ impl ToString for Query {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Tweet {
-    pub id: u64,
-    pub id_str: String,
-    pub created_at: DateTime<Utc>,
+    pub id: String,
+    pub created_at: Option<DateTime<Utc>>,
     pub full_text: String,
-    pub user_id: u64,
-    pub user_id_str: String,
-    #[serde(flatten)]
+    pub user_id: String,
     pub extra: HashMap<String, Value>,
     pub user: Option<User>,
 }
 
 impl From<RawTweet> for Tweet {
     fn from(tweet: RawTweet) -> Self {
+        let created_at = tweet.id_str.datetime().ok();
         Self {
-            id: tweet.id,
-            id_str: tweet.id_str,
-            created_at: tweet.created_at,
+            id: tweet.id_str.0,
+            created_at,
             full_text: tweet.full_text,
-            user_id: tweet.user_id,
-            user_id_str: tweet.user_id_str,
+            user_id: tweet.user_id_str,
             extra: tweet.extra,
             user: None,
         }
@@ -301,9 +297,7 @@ struct GlobalObjects {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct RawTweet {
-    pub id: u64,
-    pub id_str: String,
-    pub created_at: DateTime<Utc>,
+    pub id_str: TweetID,
     pub full_text: String,
     pub user_id: u64,
     pub user_id_str: String,
@@ -364,4 +358,23 @@ fn test_cookie_map() {
     expected.insert("foo", "bar");
     expected.insert("hoge", "bar");
     assert_eq!(expected, cookie_map("foo=bar; hoge=bar"));
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TweetID(pub String);
+
+impl TweetID {
+    fn datetime(&self) -> Result<DateTime<Utc>, ParseIntError> {
+        Ok(Utc.timestamp((self.0.parse::<i64>()? >> 22) + 1288834974657, 0))
+    }
+}
+
+#[test]
+fn test_tweet_id() {
+    assert_eq!(
+        Utc.timestamp(1596385521282, 0),
+        TweetID("1289960487912783872".to_string())
+            .datetime()
+            .unwrap()
+    );
 }
