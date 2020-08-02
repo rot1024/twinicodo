@@ -53,7 +53,7 @@ pub fn write_xml<'a, W: Write, C: ExactSizeIterator<Item = &'a Chat>>(
                 e.push_attribute(("mail", &mail.to_string() as &str));
             }
             if let Some(id) = c.id.as_ref() {
-                e.push_attribute(("mail", &id.to_string() as &str));
+                e.push_attribute(("id", &id.to_string() as &str));
             }
             Event::Start(e)
         })

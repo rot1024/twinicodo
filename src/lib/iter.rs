@@ -18,7 +18,9 @@ where
         self.0.next().map(|t| {
             let date = t.created_at.map(|d| d.timestamp() as u64).unwrap_or(0);
             let vpos = if self.1 == 0 { 0 } else { date - self.1 };
-            self.1 = date;
+            if self.1 == 0 {
+                self.1 = date;
+            }
 
             Self::Item {
                 vpos,
