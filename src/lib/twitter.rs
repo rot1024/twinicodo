@@ -168,8 +168,8 @@ impl TwitterClient {
             }
 
             let mut req = ctx.client.get(URL.to_owned()).query(&[("q", &ctx.query)]);
-            if let Some(cursor) = ctx.cursor {
-                req = req.query(&[("cursor", &cursor)]);
+            if let Some(cursor) = ctx.cursor.as_ref() {
+                req = req.query(&[("cursor", cursor)]);
             }
 
             let res = req
@@ -283,9 +283,17 @@ impl RawResponse {
         self.timeline
             .instructions
             .iter()
-            .filter_map(|i| i.replace_entry.as_ref())
-            .find(|e| e.entry_id_to_replace == "sq-cursor-bottom")
-            .map(|e| &e.entry.content.operation.cursor.value as &str)
+            .filter_map(|i| {
+                i.add_entries
+                    .as_ref()
+                    .map(|e| e.entries.iter().collect())
+                    .or_else(|| i.replace_entry.as_ref().map(|e| vec![&e.entry]))
+                    .map(|e| e.into_iter())
+            })
+            .flatten()
+            .find(|e| e.entry_id == "sq-cursor-bottom")
+            .and_then(|e| e.content.operation.as_ref())
+            .map(|o| &o.cursor.value as &str)
     }
 }
 
@@ -313,10 +321,15 @@ struct Timeline {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Instruction {
-    // #[serde(rename = "addEntry")]
-    // pub add_entry: Option<()>,
+    #[serde(rename = "addEntries")]
+    pub add_entries: Option<AddEntries>,
     #[serde(rename = "replaceEntry")]
     replace_entry: Option<ReplaceEntry>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct AddEntries {
+    entries: Vec<Entry>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -337,7 +350,7 @@ struct Entry {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct EntryContent {
-    operation: EntryContentOperation,
+    operation: Option<EntryContentOperation>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
